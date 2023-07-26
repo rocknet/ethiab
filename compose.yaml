@@ -1,0 +1,33 @@
+services:
+  ec1:
+    container_name: ethiab-ec1
+    image: "ethereum/client-go"
+    networks:
+      net:
+        ipv4_address: 172.16.8.2
+    ports:
+      - "8545:8545"
+    volumes:
+      - /home/test/devnet/ethiab:/root
+    entrypoint: /root/execution/init-ec1.sh
+
+  ec2:
+    container_name: ethiab-ec2
+    image: "ethereum/client-go"
+    depends_on:
+      - ec1
+    networks:
+      net:
+        ipv4_address: 172.16.8.3
+    ports:
+      - "8546:8545"
+    volumes:
+      - /home/test/devnet/ethiab:/root
+    entrypoint: /root/execution/init-ec2.sh
+
+networks:
+  net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.8.0/24"
