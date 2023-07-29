@@ -1,6 +1,6 @@
 [Eth]
 NetworkId = 69168469
-SyncMode = "snap"
+SyncMode = "full"
 EthDiscoveryURLs = []
 SnapDiscoveryURLs = []
 NoPruning = false
@@ -58,9 +58,9 @@ HTTPHost = "0.0.0.0"
 HTTPPort = 8545
 HTTPVirtualHosts = ["localhost"]
 HTTPModules = ["eth", "net", "web3", "admin"]
-AuthAddr = "localhost"
+AuthAddr = "0.0.0.0"
 AuthPort = 8551
-AuthVirtualHosts = ["localhost"]
+AuthVirtualHosts = ["*"]
 WSHost = ""
 WSPort = 8546
 WSModules = ["net", "web3", "eth"]
@@ -71,8 +71,9 @@ BatchResponseMaxSize = 25000000
 [Node.P2P]
 MaxPeers = 50
 NoDiscovery = false
-BootstrapNodes = ["enode://e20b2cccaa3f797a935f4b26a21085b56cb60a36ac0f254d0fe217cc7463a14dd7a6f1f3417c6e66e35ceea2b02a3eaa3c26fa44a03518f9b0db9b2521a278f9@172.16.8.2:30303"]
-BootstrapNodesV5 = ["enode://e20b2cccaa3f797a935f4b26a21085b56cb60a36ac0f254d0fe217cc7463a14dd7a6f1f3417c6e66e35ceea2b02a3eaa3c26fa44a03518f9b0db9b2521a278f9@172.16.8.2:30303"]
+# BootstrapNodes values are overwritten at startup, ignore committed values
+BootstrapNodes = ["enode://e09f5a27fb159a17c77d4874bd377dd0de78267733711aa734664a6c8d689ae2bb28faa7841198db7d7f722e341bd5aee23035ff99d89b62f2e95c41d8d220f1@172.16.8.2:30303"]
+BootstrapNodesV5 = ["enode://e09f5a27fb159a17c77d4874bd377dd0de78267733711aa734664a6c8d689ae2bb28faa7841198db7d7f722e341bd5aee23035ff99d89b62f2e95c41d8d220f1@172.16.8.2:30303"]
 StaticNodes = []
 TrustedNodes = []
 ListenAddr = ":31303"

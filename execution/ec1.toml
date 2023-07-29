@@ -1,6 +1,6 @@
 [Eth]
 NetworkId = 69168469
-SyncMode = "snap"
+SyncMode = "full"
 EthDiscoveryURLs = []
 SnapDiscoveryURLs = []
 NoPruning = false
@@ -58,9 +58,9 @@ HTTPHost = "0.0.0.0"
 HTTPPort = 8545
 HTTPVirtualHosts = ["localhost"]
 HTTPModules = ["eth", "net", "web3", "admin"]
-AuthAddr = "localhost"
+AuthAddr = "0.0.0.0"
 AuthPort = 8551
-AuthVirtualHosts = ["localhost"]
+AuthVirtualHosts = ["*"]
 WSHost = ""
 WSPort = 8546
 WSModules = ["net", "web3", "eth"]
