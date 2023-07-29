@@ -1,15 +1,26 @@
 services:
+  config: # set the genesis timestamp
+    container_name: ethiab-config
+    image: busybox
+    networks:
+      - net
+    volumes:
+      - $PWD:/root
+    entrypoint: /root/update-config.sh
+
   ec1:
     container_name: ethiab-ec1
     image: "ethereum/client-go"
+    depends_on:
+      config:
+        condition: service_completed_successfully
     networks:
       net:
         ipv4_address: 172.16.8.2
-    ports:
-      - "8545:8545"
     volumes:
-      - /home/test/devnet/ethiab:/root
+      - $PWD:/root
     entrypoint: /root/execution/init-ec1.sh
+    command: ${EC1_EXTRA_PARAMS}
 
   ec2:
     container_name: ethiab-ec2
@@ -19,11 +30,90 @@ services:
     networks:
       net:
         ipv4_address: 172.16.8.3
-    ports:
-      - "8546:8545"
     volumes:
-      - /home/test/devnet/ethiab:/root
+      - $PWD:/root
     entrypoint: /root/execution/init-ec2.sh
+    command: ${EC2_EXTRA_PARAMS}
+
+  genesis: # create genesis.ssz
+    container_name: ethiab-genesis
+    build:
+      context: .
+      dockerfile: genesis.Dockerfile
+    depends_on:
+      - ec2
+    networks:
+      - net
+    volumes:
+      - $PWD:/root
+
+  staking-deposit: # create validator keys
+    container_name: ethiab-staking-deposit
+    build:
+      context: .
+      dockerfile: staking-deposit.Dockerfile
+    depends_on:
+      genesis:
+        condition: service_completed_successfully
+    networks:
+      - net
+    volumes:
+      - $PWD:/root
+    entrypoint: /root/consensus/init-staking-deposit.sh
+
+  bc1:
+    container_name: ethiab-bc1
+    image: chainsafe/lodestar
+    depends_on:
+      staking-deposit:
+        condition: service_completed_successfully
+    networks:
+      net:
+        ipv4_address: 172.16.8.5
+    volumes:
+      - $PWD:/root
+    entrypoint: /root/consensus/init-bc1.sh
+    command: ${BC1_EXTRA_PARAMS}
+    healthcheck:
+      test: curl -f http://127.0.0.1:9596/eth/v1/node/identity || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  bc2:
+    container_name: ethiab-bc2
+    image: chainsafe/lodestar
+    depends_on:
+      bc1:
+        condition: service_healthy
+    networks:
+      net:
+        ipv4_address: 172.16.8.6
+    volumes:
+      - $PWD:/root
+    entrypoint: /root/consensus/init-bc2.sh
+    command: ${BC2_EXTRA_PARAMS}
+
+  vc:
+    container_name: ethiab-vc
+    image: chainsafe/lodestar
+    depends_on:
+      - bc2
+    networks:
+      net:
+        ipv4_address: 172.16.8.7
+    volumes:
+      - $PWD:/root
+    command: >
+      validator 
+        --dataDir /root/data/consensus/1
+        --suggestedFeeRecipient 0xCaA29806044A08E533963b2e573C1230A2cd9a2d
+        --paramsFile /root/consensus/config.yaml
+        --beaconNodes http://172.16.8.5:9596
+        --importKeystores /root/consensus/validator_keys
+        --importKeystoresPassword /root/consensus/validator_keys/password.txt
+        ${VC_EXTRA_PARAMS}
 
 networks:
   net:
