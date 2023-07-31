@@ -8,5 +8,5 @@ geth init \
 
 echo "** ethiab ** Starting geth"
 
-geth \
+exec geth \
   --config /root/execution/ec1.toml "$@"

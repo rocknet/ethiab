@@ -10,7 +10,7 @@ echo "** ethiab ** enr: $enr"
 
 echo "** ethiab ** Initializing Lodestar Beacon"
 
-node ./packages/cli/bin/lodestar beacon \
+exec node ./packages/cli/bin/lodestar beacon \
   --execution.urls "http://172.16.8.3:8551" \
   --jwt-secret "/root/data/execution/2/geth/jwtsecret" \
   --dataDir "/root/data/consensus/2" \

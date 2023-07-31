@@ -24,5 +24,5 @@ sed -i '/BootstrapNodes/,/BootstrapNodesV5/s|\[.*\]|['"${enode}"']|' /root/execu
 
 echo "** ethiab ** Starting geth"
 
-geth \
+exec geth \
   --config /root/execution/ec2.toml "$@"
