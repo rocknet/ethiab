@@ -76,7 +76,7 @@ BootstrapNodes = ["enode://e09f5a27fb159a17c77d4874bd377dd0de78267733711aa734664
 BootstrapNodesV5 = ["enode://e09f5a27fb159a17c77d4874bd377dd0de78267733711aa734664a6c8d689ae2bb28faa7841198db7d7f722e341bd5aee23035ff99d89b62f2e95c41d8d220f1@172.16.8.2:30303"]
 StaticNodes = []
 TrustedNodes = []
-ListenAddr = ":31303"
+ListenAddr = ":30303"
 DiscAddr = ""
 EnableMsgEvents = false
 

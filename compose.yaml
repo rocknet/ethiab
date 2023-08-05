@@ -30,10 +30,15 @@ services:
     networks:
       net:
         ipv4_address: 172.16.8.3
+    ports:
+      - "${EC_HOST_PORT}:${EC_HOST_PORT}"
     volumes:
       - $PWD:/root
     entrypoint: /root/execution/init-ec2.sh
     command: ${EC2_EXTRA_PARAMS}
+    environment:
+      - ENABLE_EXTERNAL_DISCOVERY=${ENABLE_EXTERNAL_DISCOVERY}
+      - EC_HOST_PORT=${EC_HOST_PORT}
 
   genesis: # create genesis.ssz
     container_name: ethiab-genesis
@@ -90,10 +95,21 @@ services:
     networks:
       net:
         ipv4_address: 172.16.8.6
+    ports:
+      - "${BN_HOST_PORT}:${BN_HOST_PORT}"
     volumes:
       - $PWD:/root
     entrypoint: /root/consensus/init-bc2.sh
     command: ${BC2_EXTRA_PARAMS}
+    environment:
+      - ENABLE_EXTERNAL_DISCOVERY=${ENABLE_EXTERNAL_DISCOVERY}
+      - BN_HOST_PORT=${BN_HOST_PORT}
+    healthcheck:
+      test: curl -f http://127.0.0.1:9596/eth/v1/node/identity || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
   vc:
     container_name: ethiab-vc
@@ -114,6 +130,23 @@ services:
         --importKeystores /root/consensus/validator_keys
         --importKeystoresPassword /root/consensus/validator_keys/password.txt
         ${VC_EXTRA_PARAMS}
+
+  p2p-info:
+    container_name: ethiab-p2p-info
+    image: nginx:alpine
+    depends_on:
+      bc2:
+        condition: service_healthy
+    networks:
+      - net
+    ports:
+      - "${P2P_INFO_PORT}:80"
+    volumes:
+      - $PWD:/root
+    working_dir: /root
+    entrypoint: /root/collect-p2p-info.sh
+    environment:
+      - ENABLE_EXTERNAL_DISCOVERY=${ENABLE_EXTERNAL_DISCOVERY}
 
 networks:
   net:

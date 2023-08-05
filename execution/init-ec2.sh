@@ -22,7 +22,19 @@ echo "** ethiab ** Setting enode in ec2.toml"
 # We use pipe delimeter due to the forward slashes in enode
 sed -i '/BootstrapNodes/,/BootstrapNodesV5/s|\[.*\]|['"${enode}"']|' /root/execution/ec2.toml
 
-echo "** ethiab ** Starting geth"
+if [ "$ENABLE_EXTERNAL_DISCOVERY" == "true" ]; then
+  echo "** ethiab ** Getting external IP, to set on enode"
+  external_ip=$(curl https://ipinfo.io/ip -s)
 
-exec geth \
-  --config /root/execution/ec2.toml "$@"
+  echo "** ethiab ** starting geth"
+  exec geth \
+    --config /root/execution/ec2.toml \
+    --port "$EC_HOST_PORT" \
+    --discovery.port "$EC_HOST_PORT" \
+    --nat extip:"$external_ip" "$@"
+else
+  echo "** ethiab ** Starting geth"
+
+  exec geth \
+    --config /root/execution/ec2.toml "$@"
+fi
