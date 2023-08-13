@@ -7,7 +7,6 @@ NoPruning = false
 NoPrefetch = false
 TxLookupLimit = 2350000
 LightPeers = 100
-UltraLightFraction = 75
 DatabaseCache = 512
 DatabaseFreezer = ""
 TrieCleanCache = 154
@@ -52,7 +51,7 @@ MaxPrice = 500000000000
 IgnorePrice = 2
 
 [Node]
-DataDir = "/root/data/execution/2"
+DataDir = "/root/data/execution"
 IPCPath = "geth.ipc"
 HTTPHost = "0.0.0.0"
 HTTPPort = 8545
@@ -72,11 +71,11 @@ BatchResponseMaxSize = 25000000
 MaxPeers = 50
 NoDiscovery = false
 # BootstrapNodes values are overwritten at startup, ignore committed values
-BootstrapNodes = ["enode://e09f5a27fb159a17c77d4874bd377dd0de78267733711aa734664a6c8d689ae2bb28faa7841198db7d7f722e341bd5aee23035ff99d89b62f2e95c41d8d220f1@172.16.8.2:30303"]
-BootstrapNodesV5 = ["enode://e09f5a27fb159a17c77d4874bd377dd0de78267733711aa734664a6c8d689ae2bb28faa7841198db7d7f722e341bd5aee23035ff99d89b62f2e95c41d8d220f1@172.16.8.2:30303"]
+BootstrapNodes = ["enode://d20445117706a9c70c14c1756804ea6c9687dec09cacf3808a0be164377816168ca3035918bf0f57c8021870bd09834e3d98cf128ac8e4d2dcb0f724f3bdea64@172.16.8.2:30303"]
+BootstrapNodesV5 = ["enode://d20445117706a9c70c14c1756804ea6c9687dec09cacf3808a0be164377816168ca3035918bf0f57c8021870bd09834e3d98cf128ac8e4d2dcb0f724f3bdea64@172.16.8.2:30303"]
 StaticNodes = []
 TrustedNodes = []
-ListenAddr = ":31303"
+ListenAddr = ":30303"
 DiscAddr = ""
 EnableMsgEvents = false
 

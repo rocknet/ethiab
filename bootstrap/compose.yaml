@@ -1,3 +1,4 @@
+name: ethiab
 services:
   config: # set the genesis timestamp
     container_name: ethiab-config
@@ -30,27 +31,45 @@ services:
     networks:
       net:
         ipv4_address: 172.16.8.3
+    ports:
+      - "${EC_HOST_PORT}:${EC_HOST_PORT}"
     volumes:
       - $PWD:/root
     entrypoint: /root/execution/init-ec2.sh
     command: ${EC2_EXTRA_PARAMS}
+    environment:
+      - ENABLE_EXTERNAL_DISCOVERY=${ENABLE_EXTERNAL_DISCOVERY}
+      - EC_HOST_PORT=${EC_HOST_PORT}
 
-  genesis: # create genesis.ssz
+  mnemonics: # create mnemonic for bootnode and any other peers
+    container_name: ethiab-mnemonics
+    build:
+      context: ./consensus/create-mnemonics
+      dockerfile: create-mnemonics.Dockerfile
+    depends_on:
+      - ec2 # not really, just sensible sequencing
+    networks:
+      - net
+    volumes:
+      - $PWD:/root
+    environment:
+      - VALIDATOR_COUNT_PER_PARTICIPANT=${VALIDATOR_COUNT_PER_PARTICIPANT}
+
+  genesis: # build eth2-testnet-genesis with golang and create genesis.ssz
     container_name: ethiab-genesis
     build:
-      context: .
       dockerfile: genesis.Dockerfile
     depends_on:
-      - ec2
+      mnemonics:
+        condition: service_completed_successfully
     networks:
       - net
     volumes:
       - $PWD:/root
 
-  staking-deposit: # create validator keys
+  staking-deposit: # build staking-deposit-cli with python and create validator keys
     container_name: ethiab-staking-deposit
     build:
-      context: .
       dockerfile: staking-deposit.Dockerfile
     depends_on:
       genesis:
@@ -59,7 +78,6 @@ services:
       - net
     volumes:
       - $PWD:/root
-    entrypoint: /root/consensus/init-staking-deposit.sh
 
   bc1:
     container_name: ethiab-bc1
@@ -90,10 +108,21 @@ services:
     networks:
       net:
         ipv4_address: 172.16.8.6
+    ports:
+      - "${BN_HOST_PORT}:${BN_HOST_PORT}"
     volumes:
       - $PWD:/root
     entrypoint: /root/consensus/init-bc2.sh
     command: ${BC2_EXTRA_PARAMS}
+    environment:
+      - ENABLE_EXTERNAL_DISCOVERY=${ENABLE_EXTERNAL_DISCOVERY}
+      - BN_HOST_PORT=${BN_HOST_PORT}
+    healthcheck:
+      test: curl -f http://127.0.0.1:9596/eth/v1/node/identity || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
   vc:
     container_name: ethiab-vc
@@ -115,8 +144,26 @@ services:
         --importKeystoresPassword /root/consensus/validator_keys/password.txt
         ${VC_EXTRA_PARAMS}
 
+  p2p-info:
+    container_name: ethiab-p2p-info
+    image: nginx:alpine
+    depends_on:
+      bc2:
+        condition: service_healthy
+    networks:
+      - net
+    ports:
+      - "${P2P_INFO_PORT}:80"
+    volumes:
+      - $PWD:/root
+    working_dir: /root
+    entrypoint: /root/serve-p2p-info.sh
+    environment:
+      - ENABLE_EXTERNAL_DISCOVERY=${ENABLE_EXTERNAL_DISCOVERY}
+
 networks:
   net:
+    name: ethiab-net
     ipam:
       driver: default
       config:

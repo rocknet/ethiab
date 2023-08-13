@@ -1,0 +1,94 @@
+name: ethiab
+services:
+  get-bootstrap: # gets the genesis.ssz, enode and enr records of the bootnode
+    container_name: ethiab-bootstrap
+    image: alpine
+    networks:
+      - net
+    volumes:
+      - $PWD:/root
+    command: |
+      /bin/sh -c "if [ "${BOOTNODE_IP}" = "" ]; then echo \"BOOTNODE_IP must be populated in .env file\"; exit 1; fi &&
+      mkdir -p /root/data &&
+      apk update &&
+      apk add curl &&
+      curl -o /root/data/ethiab-bootnodes.json ${BOOTNODE_IP}/ethiab-bootnodes.json &&
+      curl -o /root/data/genesis.json ${BOOTNODE_IP}/genesis.json &&
+      curl -o /root/data/config.yaml ${BOOTNODE_IP}/config.yaml &&
+      curl -o /root/data/genesis.ssz  ${BOOTNODE_IP}/genesis.ssz &&
+      curl -o /root/data/mnemonic.yaml ${BOOTNODE_IP}/mnemonics/${PEER_KEY}.yaml"
+
+  staking-deposit: # build staking-deposit-cli with python and create validator keys
+    container_name: ethiab-staking-deposit
+    build:
+      dockerfile: staking-deposit.Dockerfile
+    depends_on:
+      get-bootstrap:
+        condition: service_completed_successfully
+    networks:
+      - net
+    volumes:
+      - $PWD:/root
+
+  ec:
+    container_name: ethiab-ec
+    image: "ethereum/client-go"
+    depends_on:
+      staking-deposit:
+        condition: service_completed_successfully
+    networks:
+      net:
+        ipv4_address: 172.16.9.2
+    ports:
+      - "${EC_HOST_PORT}:${EC_HOST_PORT}"
+    volumes:
+      - $PWD:/root
+    entrypoint: /root/execution/init-ec.sh
+    command: ${EC_EXTRA_PARAMS}
+    environment:
+      - EC_HOST_PORT=${EC_HOST_PORT}
+
+  bc:
+    container_name: ethiab-bc
+    image: chainsafe/lodestar
+    depends_on:
+      - ec
+    networks:
+      net:
+        ipv4_address: 172.16.9.3
+    ports:
+      - "${BN_HOST_PORT}:${BN_HOST_PORT}"
+    volumes:
+      - $PWD:/root
+    entrypoint: /root/consensus/init-bc.sh
+    command: ${BC_EXTRA_PARAMS}
+    environment:
+      - BN_HOST_PORT=${BN_HOST_PORT}
+
+  vc:
+    container_name: ethiab-vc
+    image: chainsafe/lodestar
+    depends_on:
+      - bc
+    networks:
+      net:
+        ipv4_address: 172.16.9.4
+    volumes:
+      - $PWD:/root
+    command: >
+      validator
+        --dataDir /root/data/consensus
+        --suggestedFeeRecipient 0xCaA29806044A08E533963b2e573C1230A2cd9a2d
+        --paramsFile /root/data/config.yaml
+        --beaconNodes http://172.16.9.3:9596
+        --importKeystores /root/consensus/validator_keys
+        --importKeystoresPassword /root/consensus/validator_keys/password.txt
+        ${VC_EXTRA_PARAMS}
+
+networks:
+  net:
+    name: ethiab-net
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.9.0/24"

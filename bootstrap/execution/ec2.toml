@@ -7,7 +7,6 @@ NoPruning = false
 NoPrefetch = false
 TxLookupLimit = 2350000
 LightPeers = 100
-UltraLightFraction = 75
 DatabaseCache = 512
 DatabaseFreezer = ""
 TrieCleanCache = 154
@@ -52,7 +51,7 @@ MaxPrice = 500000000000
 IgnorePrice = 2
 
 [Node]
-DataDir = "/root/data/execution/1"
+DataDir = "/root/data/execution/2"
 IPCPath = "geth.ipc"
 HTTPHost = "0.0.0.0"
 HTTPPort = 8545
@@ -71,8 +70,9 @@ BatchResponseMaxSize = 25000000
 [Node.P2P]
 MaxPeers = 50
 NoDiscovery = false
-BootstrapNodes = []
-BootstrapNodesV5 = []
+# BootstrapNodes values are overwritten at startup, ignore committed values
+BootstrapNodes = ["enode://c090b2d10458f6e13d8c0c0630fc0e60aba12a5f249bf877dd294e96497aa140fdbd3a6bf2d619d5982f52cfeb918f924f1b0fe882c0c49f79d9f115f63dea81@172.16.8.2:30303"]
+BootstrapNodesV5 = ["enode://c090b2d10458f6e13d8c0c0630fc0e60aba12a5f249bf877dd294e96497aa140fdbd3a6bf2d619d5982f52cfeb918f924f1b0fe882c0c49f79d9f115f63dea81@172.16.8.2:30303"]
 StaticNodes = []
 TrustedNodes = []
 ListenAddr = ":30303"
