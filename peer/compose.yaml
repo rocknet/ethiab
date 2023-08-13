@@ -39,6 +39,8 @@ services:
     networks:
       net:
         ipv4_address: 172.16.9.2
+    ports:
+      - "${EC_HOST_PORT}:${EC_HOST_PORT}"
     volumes:
       - $PWD:/root
     entrypoint: /root/execution/init-ec.sh
@@ -54,6 +56,8 @@ services:
     networks:
       net:
         ipv4_address: 172.16.9.3
+    ports:
+      - "${BN_HOST_PORT}:${BN_HOST_PORT}"
     volumes:
       - $PWD:/root
     entrypoint: /root/consensus/init-bc.sh
