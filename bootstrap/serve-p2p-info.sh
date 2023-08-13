@@ -17,10 +17,15 @@ else
   echo "** ethiab ** enr: $enr"
 
   echo "** ethiab ** Writing enode and enr to json file"
-  mkdir -p www
-  jq -n --arg enode "$enode" --arg enr "$enr" '{ enode: $enode, enr: $enr }' > /usr/share/nginx/html/ethiab-bootnodes-p2p.json
+  jq -n --arg enode "$enode" --arg enr "$enr" '{ enode: $enode, enr: $enr }' > /usr/share/nginx/html/ethiab-bootnodes.json
 
+  cp execution/genesis.json /usr/share/nginx/html
+  cp consensus/config.yaml /usr/share/nginx/html
   cp consensus/genesis.ssz /usr/share/nginx/html
+
+  mkdir -p /usr/share/nginx/html/mnemonics
+  cp consensus/mnemonics/*.yaml /usr/share/nginx/html/mnemonics
+
   exec nginx -g "daemon off;"
 fi
 

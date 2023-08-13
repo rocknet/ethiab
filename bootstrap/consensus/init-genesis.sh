@@ -11,12 +11,10 @@ echo "** ethiab ** hash: $genesisHash"
 echo "** ethiab ** Setting genesis hash in consensus/config.yaml"
 sed -i '/TERMINAL_BLOCK_HASH/s/0x.*/'"${genesisHash}"'/' /root/consensus/config.yaml
 
-echo "$genesisHash" > /root/consensus/deposit_contract_block.txt
-
 echo "** ethiab ** Running eth2-testnet-genesis"
 ./eth2-testnet-genesis capella \
   --config /root/consensus/config.yaml \
   --eth1-config /root/execution/genesis.json \
-  --mnemonics /root/consensus/mnemonic.yaml \
+  --mnemonics /root/consensus/mnemonics.yaml \
   --state-output /root/consensus/genesis.ssz \
   --tranches-dir /root/consensus/tranches

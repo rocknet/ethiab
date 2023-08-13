@@ -1,3 +1,4 @@
+name: ethiab
 services:
   config: # set the genesis timestamp
     container_name: ethiab-config
@@ -40,22 +41,35 @@ services:
       - ENABLE_EXTERNAL_DISCOVERY=${ENABLE_EXTERNAL_DISCOVERY}
       - EC_HOST_PORT=${EC_HOST_PORT}
 
-  genesis: # create genesis.ssz
+  mnemonics: # create mnemonic for bootnode and any other peers
+    container_name: ethiab-mnemonics
+    build:
+      context: ./consensus/create-mnemonics
+      dockerfile: create-mnemonics.Dockerfile
+    depends_on:
+      - ec2 # not really, just sensible sequencing
+    networks:
+      - net
+    volumes:
+      - $PWD:/root
+    environment:
+      - VALIDATOR_COUNT_PER_PARTICIPANT=${VALIDATOR_COUNT_PER_PARTICIPANT}
+
+  genesis: # build eth2-testnet-genesis with golang and create genesis.ssz
     container_name: ethiab-genesis
     build:
-      context: .
       dockerfile: genesis.Dockerfile
     depends_on:
-      - ec2
+      mnemonics:
+        condition: service_completed_successfully
     networks:
       - net
     volumes:
       - $PWD:/root
 
-  staking-deposit: # create validator keys
+  staking-deposit: # build staking-deposit-cli with python and create validator keys
     container_name: ethiab-staking-deposit
     build:
-      context: .
       dockerfile: staking-deposit.Dockerfile
     depends_on:
       genesis:
@@ -64,7 +78,6 @@ services:
       - net
     volumes:
       - $PWD:/root
-    entrypoint: /root/consensus/init-staking-deposit.sh
 
   bc1:
     container_name: ethiab-bc1
@@ -144,12 +157,13 @@ services:
     volumes:
       - $PWD:/root
     working_dir: /root
-    entrypoint: /root/collect-p2p-info.sh
+    entrypoint: /root/serve-p2p-info.sh
     environment:
       - ENABLE_EXTERNAL_DISCOVERY=${ENABLE_EXTERNAL_DISCOVERY}
 
 networks:
   net:
+    name: ethiab-net
     ipam:
       driver: default
       config:
