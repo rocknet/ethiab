@@ -6,6 +6,6 @@ COPY ["package.json", "package-lock.json", "./"]
 
 RUN npm install
 
-COPY create-mnemonics.js .
+COPY get-eoa-info.js .
 
 CMD ["node", "get-eoa-info.js"]
