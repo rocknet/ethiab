@@ -20,7 +20,7 @@ if [ "$ENABLE_EXTERNAL_DISCOVERY" == "true" ]; then
     --dataDir "/root/data/consensus/2" \
     --paramsFile "/root/consensus/config.yaml" \
     --genesisStateFile "/root/consensus/genesis.ssz" \
-    --port "$BN_HOST_PORT" \
+    --port "$BN_P2P_HOST_PORT" \
     --enr.ip "$external_ip" \
     --nat \
     --rest.address 0.0.0.0 \

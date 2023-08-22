@@ -18,12 +18,25 @@ services:
       curl -o /root/data/genesis.ssz  ${BOOTNODE_IP}/genesis.ssz &&
       curl -o /root/data/mnemonic.yaml ${BOOTNODE_IP}/mnemonics/${PEER_KEY}.yaml"
 
+  get-eoa-info:
+    container_name: ethiab-eoa-info
+    build:
+      context: ./get-eoa-info
+      dockerfile: get-eoa-info.Dockerfile
+    depends_on:
+      get-bootstrap:
+        condition: service_completed_successfully
+    networks:
+      - net
+    volumes:
+      - $PWD:/root
+
   staking-deposit: # build staking-deposit-cli with python and create validator keys
     container_name: ethiab-staking-deposit
     build:
       dockerfile: staking-deposit.Dockerfile
     depends_on:
-      get-bootstrap:
+      get-eoa-info:
         condition: service_completed_successfully
     networks:
       - net
@@ -40,13 +53,16 @@ services:
       net:
         ipv4_address: 172.16.9.2
     ports:
-      - "${EC_HOST_PORT}:${EC_HOST_PORT}"
+      - "${EC_P2P_HOST_PORT}:${EC_P2P_HOST_PORT}"
+      - "${EC_RPC_HOST_PORT}:${EC_RPC_HOST_PORT}"
     volumes:
       - $PWD:/root
     entrypoint: /root/execution/init-ec.sh
     command: ${EC_EXTRA_PARAMS}
     environment:
-      - EC_HOST_PORT=${EC_HOST_PORT}
+      - EC_P2P_HOST_PORT=${EC_P2P_HOST_PORT}
+      - EC_RPC_HOST_PORT=${EC_RPC_HOST_PORT}
+      - ENABLE_EC_RPC=${ENABLE_EC_RPC}
 
   bc:
     container_name: ethiab-bc
@@ -57,13 +73,13 @@ services:
       net:
         ipv4_address: 172.16.9.3
     ports:
-      - "${BN_HOST_PORT}:${BN_HOST_PORT}"
+      - "${BN_P2P_HOST_PORT}:${BN_P2P_HOST_PORT}"
     volumes:
       - $PWD:/root
     entrypoint: /root/consensus/init-bc.sh
     command: ${BC_EXTRA_PARAMS}
     environment:
-      - BN_HOST_PORT=${BN_HOST_PORT}
+      - BN_P2P_HOST_PORT=${BN_P2P_HOST_PORT}
 
   vc:
     container_name: ethiab-vc

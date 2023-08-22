@@ -9,11 +9,28 @@ services:
       - $PWD:/root
     entrypoint: /root/update-config.sh
 
+  mnemonics: # create mnemonic for bootnode and any other peers
+    container_name: ethiab-mnemonics
+    build:
+      context: ./consensus/create-mnemonics
+      dockerfile: create-mnemonics.Dockerfile
+    depends_on:
+      config:
+        condition: service_completed_successfully
+    networks:
+      - net
+    volumes:
+      - $PWD:/root
+    environment:
+      - VALIDATOR_COUNT_PER_PARTICIPANT=${VALIDATOR_COUNT_PER_PARTICIPANT}
+      - ENABLE_EXTERNAL_DISCOVERY=${ENABLE_EXTERNAL_DISCOVERY}
+      - ETH_ALLOCATION=${ETH_ALLOCATION}
+
   ec1:
     container_name: ethiab-ec1
     image: "ethereum/client-go"
     depends_on:
-      config:
+      mnemonics:
         condition: service_completed_successfully
     networks:
       net:
@@ -32,36 +49,24 @@ services:
       net:
         ipv4_address: 172.16.8.3
     ports:
-      - "${EC_HOST_PORT}:${EC_HOST_PORT}"
+      - "${EC_P2P_HOST_PORT}:${EC_P2P_HOST_PORT}"
+      - "${EC_RPC_HOST_PORT}:${EC_RPC_HOST_PORT}"
     volumes:
       - $PWD:/root
     entrypoint: /root/execution/init-ec2.sh
     command: ${EC2_EXTRA_PARAMS}
     environment:
       - ENABLE_EXTERNAL_DISCOVERY=${ENABLE_EXTERNAL_DISCOVERY}
-      - EC_HOST_PORT=${EC_HOST_PORT}
-
-  mnemonics: # create mnemonic for bootnode and any other peers
-    container_name: ethiab-mnemonics
-    build:
-      context: ./consensus/create-mnemonics
-      dockerfile: create-mnemonics.Dockerfile
-    depends_on:
-      - ec2 # not really, just sensible sequencing
-    networks:
-      - net
-    volumes:
-      - $PWD:/root
-    environment:
-      - VALIDATOR_COUNT_PER_PARTICIPANT=${VALIDATOR_COUNT_PER_PARTICIPANT}
+      - EC_P2P_HOST_PORT=${EC_P2P_HOST_PORT}
+      - ENABLE_RPC=${ENABLE_EC2_RPC}
+      - EC_RPC_HOST_PORT=${EC_RPC_HOST_PORT}
 
   genesis: # build eth2-testnet-genesis with golang and create genesis.ssz
     container_name: ethiab-genesis
     build:
       dockerfile: genesis.Dockerfile
     depends_on:
-      mnemonics:
-        condition: service_completed_successfully
+      - ec2 # Not really, just sensible sequencing
     networks:
       - net
     volumes:
@@ -109,14 +114,14 @@ services:
       net:
         ipv4_address: 172.16.8.6
     ports:
-      - "${BN_HOST_PORT}:${BN_HOST_PORT}"
+      - "${BN_P2P_HOST_PORT}:${BN_P2P_HOST_PORT}"
     volumes:
       - $PWD:/root
     entrypoint: /root/consensus/init-bc2.sh
     command: ${BC2_EXTRA_PARAMS}
     environment:
       - ENABLE_EXTERNAL_DISCOVERY=${ENABLE_EXTERNAL_DISCOVERY}
-      - BN_HOST_PORT=${BN_HOST_PORT}
+      - BN_P2P_HOST_PORT=${BN_P2P_HOST_PORT}
     healthcheck:
       test: curl -f http://127.0.0.1:9596/eth/v1/node/identity || exit 1
       interval: 10s
