@@ -19,7 +19,7 @@ exec node --max-old-space-size=4096 ./packages/cli/bin/lodestar beacon \
   --dataDir "/root/data/consensus" \
   --paramsFile "/root/data/config.yaml" \
   --genesisStateFile "/root/data/genesis.ssz" \
-  --port "$BN_HOST_PORT" \
+  --port "$BN_P2P_HOST_PORT" \
   --enr.ip "$external_ip" \
   --nat \
   --rest.address 0.0.0.0 \

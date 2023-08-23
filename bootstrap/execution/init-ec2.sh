@@ -29,12 +29,16 @@ if [ "$ENABLE_EXTERNAL_DISCOVERY" == "true" ]; then
   echo "** ethiab ** starting geth"
   exec geth \
     --config /root/execution/ec2.toml \
-    --port "$EC_HOST_PORT" \
-    --discovery.port "$EC_HOST_PORT" \
-    --nat extip:"$external_ip" "$@"
+    --port "$EC_P2P_HOST_PORT" \
+    --discovery.port "$EC_P2P_HOST_PORT" \
+    --nat extip:"$external_ip" \
+    --http="$ENABLE_RPC" \
+    --http.addr "0.0.0.0" "$@"
 else
   echo "** ethiab ** Starting geth"
 
   exec geth \
-    --config /root/execution/ec2.toml "$@"
+    --config /root/execution/ec2.toml \
+    --http="$ENABLE_RPC" \
+    --http.addr "0.0.0.0" "$@"
 fi

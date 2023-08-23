@@ -53,7 +53,6 @@ IgnorePrice = 2
 [Node]
 DataDir = "/root/data/execution"
 IPCPath = "geth.ipc"
-HTTPHost = "0.0.0.0"
 HTTPPort = 8545
 HTTPVirtualHosts = ["localhost"]
 HTTPModules = ["eth", "net", "web3", "admin"]

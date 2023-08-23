@@ -4,3 +4,4 @@ docker compose down
 sudo rm -rf data
 sudo rm -rf consensus/validator_keys
 rm -f consensus/mnemonic.yaml
+rm -f ethiab_info.json

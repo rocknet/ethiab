@@ -24,6 +24,8 @@ external_ip=$(curl https://ipinfo.io/ip -s)
 echo "** ethiab ** starting geth"
 exec geth \
   --config /root/execution/ec.toml \
-  --port "$EC_HOST_PORT" \
-  --discovery.port "$EC_HOST_PORT" \
-  --nat extip:"$external_ip" "$@"
+  --port "$EC_P2P_HOST_PORT" \
+  --discovery.port "$EC_P2P_HOST_PORT" \
+  --nat extip:"$external_ip" \
+  --http="$ENABLE_EC_RPC" \
+  --http.addr "0.0.0.0" "$@"
