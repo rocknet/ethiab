@@ -38,7 +38,7 @@ function init() {
 
         // As a fail-safe, skip any remaining items in participants.yaml if we're not peering externally.
         // This ensures only the boot node's validators are in the genesis state.
-        if (process.env.ENABLE_EXTERNAL_DISCOVERY !== true) {
+        if (process.env.ENABLE_EXTERNAL_DISCOVERY !== 'true') {
             break;
         }
 
