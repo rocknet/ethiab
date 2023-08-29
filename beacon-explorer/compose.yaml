@@ -1,0 +1,84 @@
+name: ethiab
+services:
+  postgres:
+    container_name: ethiab-postgres
+    image: postgres:15
+    networks:
+      net:
+        ipv4_address: 172.16.8.10
+    environment:
+      - POSTGRES_USER=ethstakersclub
+      - POSTGRES_PASSWORD=password
+      - PGCLIENTENCODING=UTF8
+      - PGTZ=UTC
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    container_name: ethiab-redis
+    image: redis:7
+    networks:
+      net:
+        ipv4_address: 172.16.8.11
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  explorer:
+    container_name: ethiab-explorer
+    build:
+      dockerfile: beacon-explorer.Dockerfile
+    depends_on:
+      - redis
+    networks:
+      net:
+        ipv4_address: 172.16.8.20
+    ports:
+      - "8000:8000"
+    volumes:
+      - $PWD:/root
+    entrypoint: /root/init-ethstakersclub.sh
+    environment:
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
+      - SERVERNAMES=${SERVERNAMES}
+    healthcheck:
+      test: exit 0 # curl -f http://127.0.0.1:8000/404.html || exit 1
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+
+  celery:
+    container_name: ethiab-explorer-celery
+    build:
+      dockerfile: beacon-explorer.Dockerfile
+    depends_on:
+      explorer:
+        condition: service_healthy
+    networks:
+      - net
+    environment:
+      - SERVERNAMES=${SERVERNAMES}
+    command: celery -A ethstakersclub worker --loglevel=info --without-gossip --without-mingle --max-tasks-per-child=80
+
+  block-listener:
+    container_name: ethiab-explorer-block-listener
+    build:
+      dockerfile: beacon-explorer.Dockerfile
+    depends_on:
+      explorer:
+        condition: service_healthy
+    networks:
+      - net
+    environment:
+      - SERVERNAMES=${SERVERNAMES}
+    command: python manage.py block_listener
+
+networks:
+  net:
+    name: ethiab-net
+    external: true
